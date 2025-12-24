@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev:frontend": "next dev",
+    "dev:server" : "tsx server/src/server.ts",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:frontend\""
   },
   "dependencies": {
     "next": "16.1.0",

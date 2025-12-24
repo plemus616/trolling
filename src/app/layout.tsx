@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Troll trolling",
-  description: "troll trolling",
+  title: "Samael",
+  description: "Samael mini DOS tool",
 };
 
 export default function RootLayout({

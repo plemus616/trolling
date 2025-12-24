@@ -1,5 +1,5 @@
 "use client";
-import {use, useEffect, useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {InputText} from "primereact/inputtext";
 import {Dropdown} from "primereact/dropdown";
 
@@ -15,7 +15,7 @@ export default function Home() {
     packetSize: "",
     time: ""
   });
-  const [buttonDisable, setButtonDisable] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [attackTypes, setAttackTypes] = useState([
     {value: "http-flood", label: "HTTP Flood"},
     {value: "tcp-flood", label: "TCP Flood"},
@@ -24,7 +24,7 @@ export default function Home() {
   const [selectedAttack, setSelectedAttack] = useState("http-flood");
 
   function connectWs(){
-    const ws = new WebSocket("wss://ws.gcloud.com.gt/api/ws/master");
+    const ws = new WebSocket("ws://localhost:8080/api/ws/master");
     wsRef.current = ws;
     ws.onopen = () =>{
       setClosing("");

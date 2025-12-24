@@ -24,7 +24,7 @@ export default function Home() {
   const [selectedAttack, setSelectedAttack] = useState("http-flood");
 
   function connectWs(){
-    const ws = new WebSocket("ws://51.75.204.28:8081/api/ws/master");
+    const ws = new WebSocket("wss://ws.gcloud.com.gt/api/ws/master");
     wsRef.current = ws;
     ws.onopen = () =>{
       setClosing("");

